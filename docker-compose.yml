@@ -1,0 +1,14 @@
+version: '3.7'
+services:
+  db:
+    image: postgres:15
+    container_name: basketlog_db
+    volumes:
+      - postgresdata:/var/lib/postgresql/basketlog_data
+    env_file:
+      - .env-non-dev
+    ports:
+      - 5432:5432
+
+volumes:
+  postgresdata:
