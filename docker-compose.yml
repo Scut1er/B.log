@@ -1,4 +1,5 @@
 version: '3.7'
+
 services:
   db:
     image: postgres:15
@@ -9,6 +10,19 @@ services:
       - .env-non-dev
     ports:
       - 5432:5432
+  auth-service:
+    image: auth-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth-service
+    env_file:
+      - .env-non-dev
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+
 
 volumes:
   postgresdata:
