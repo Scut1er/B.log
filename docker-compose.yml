@@ -3,26 +3,45 @@ version: '3.7'
 services:
   db:
     image: postgres:15
-    container_name: basketlog_db
+    container_name: postgres_container
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     volumes:
       - postgresdata:/var/lib/postgresql/basketlog_data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
     env_file:
-      - .env-non-dev
+      - .env-main
     ports:
       - 5432:5432
+    networks:
+      - custom_network
+
   auth-service:
     image: auth-service
     build:
-      context: .
+      context: ./backend/auth-service
       dockerfile: Dockerfile
     container_name: auth-service
     env_file:
-      - .env-non-dev
+      - ./backend/auth-service/.env
     ports:
       - 8000:8000
     depends_on:
-      - db
-
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/auth-service/app/migrations:/auth-service/app/migrations
+    networks:
+      - custom_network
 
 volumes:
   postgresdata:
+
+
+networks:
+  custom_network:
+    driver: bridge
