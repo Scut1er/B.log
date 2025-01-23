@@ -21,9 +21,9 @@ def decode_jwt(token: str, public_key: str, algorithm: str = "RS256") -> dict:
 
 def create_token(user_id: int,
                  private_key: str,
-                 expires_delta: timedelta) -> str:
+                 expires_at: datetime) -> str:
     payload = {"sub": str(user_id),
-               "exp": datetime.now(timezone.utc) + expires_delta}
+               "exp": expires_at}
     return encode_jwt(payload=payload, private_key=private_key)
 
 

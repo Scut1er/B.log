@@ -49,4 +49,4 @@ class SQLAlchemyRepository(AbstractRepository):
                     values(**data))
             result = await session.execute(stmt)
             await session.commit()
-        return result.rowcount  # кол-во измененных строк в бд
+        return result.rowcount  # кол-во измененных строк в бд == True/False
