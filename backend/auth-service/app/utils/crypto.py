@@ -1,15 +1,15 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 
 from jose import jwt
-from app.config import settings
 
 
-def encode_jwt(payload: dict, private_key: str, algorithm: str = "RS256") -> str:
+
+def encode_jwt(payload: dict, private_key: str, algorithm: str = "ES256") -> str:
     """Создание JWT токена с использованием асимметричной криптографии"""
     return jwt.encode(claims=payload, key=private_key, algorithm=algorithm)
 
 
-def decode_jwt(token: str, public_key: str, algorithm: str = "RS256") -> dict:
+def decode_jwt(token: str, public_key: str, algorithm: str = "ES256") -> dict:
     """Декодирование JWT токена с использованием асимметричной криптографии"""
     try:
         return jwt.decode(token=token, key=public_key, algorithms=[algorithm])
@@ -19,10 +19,12 @@ def decode_jwt(token: str, public_key: str, algorithm: str = "RS256") -> dict:
         raise Exception("Invalid token")
 
 
-def create_token(user_id: int,
-                 private_key: str,
-                 expires_at: datetime) -> str:
+def create_jwt_token(user_id: int,
+                     token_type: str,
+                     private_key: str,
+                     expires_at: datetime) -> str:
     payload = {"sub": str(user_id),
+               "type": token_type,
                "exp": expires_at}
     return encode_jwt(payload=payload, private_key=private_key)
 
