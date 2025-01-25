@@ -1,6 +1,22 @@
 from datetime import datetime
+from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
+
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    fullname: Optional[str] = None
+
+
+class UserResponseSchema(BaseModel):
+    id: int
+    email: str
+    fullname: Optional[str]
+
+    class Config:
+        from_attributes = True
 
 
 class RefreshTokenSchema(BaseModel):
@@ -13,9 +29,11 @@ class RefreshTokenSchema(BaseModel):
         from_attributes = True
 
 
-class TokensSchema(BaseModel):
+class TokensResponse(BaseModel):
     access_token: str
     refresh_token: str
 
-    class Config:
-        from_attributes = True
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
