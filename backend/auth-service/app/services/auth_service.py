@@ -2,7 +2,7 @@ from typing import Optional
 
 from app.models.users import User
 from app.repositories.usersRepo import UsersRepository
-from app.utils.helpers import generate_hashed_password
+from app.utils.helpers import generate_hashed_password, check_password
 
 
 class AuthService:
@@ -25,3 +25,11 @@ class AuthService:
 
         return new_user
 
+    async def login_user(self, email: str, password: str) -> User:
+        # Проверяем, существует ли пользователь с данным email
+        user = await self.users_repository.find_by_email(email)
+        if not user:
+            raise Exception("")  # КАСТОМНАЯ ОШИБКА ДОБАВИТЬ!!!!!!!
+        if not check_password(password, user.hashed_password, user.salt):
+            raise Exception("")  # КАСТОМНАЯ ОШИБКА ДОБАВИТЬ!!!!!!!
+        return user

@@ -4,9 +4,12 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 
-class RegisterRequest(BaseModel):
+class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+
+class RegisterRequest(LoginRequest):
     fullname: Optional[str] = None
 
 
@@ -32,8 +35,3 @@ class RefreshTokenSchema(BaseModel):
 class TokensResponse(BaseModel):
     access_token: str
     refresh_token: str
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str

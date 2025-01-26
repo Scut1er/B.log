@@ -2,14 +2,10 @@ from datetime import datetime
 
 from jose import jwt
 
+from app.config import settings
 
 
-def encode_jwt(payload: dict, private_key: str, algorithm: str = "ES256") -> str:
-    """Создание JWT токена с использованием асимметричной криптографии"""
-    return jwt.encode(claims=payload, key=private_key, algorithm=algorithm)
-
-
-def decode_jwt(token: str, public_key: str, algorithm: str = "ES256") -> dict:
+def decode_jwt(token: str, public_key: str, algorithm: str) -> dict:
     """Декодирование JWT токена с использованием асимметричной криптографии"""
     try:
         return jwt.decode(token=token, key=public_key, algorithms=[algorithm])
@@ -26,6 +22,6 @@ def create_jwt_token(user_id: int,
     payload = {"sub": str(user_id),
                "type": token_type,
                "exp": expires_at}
-    return encode_jwt(payload=payload, private_key=private_key)
+    return jwt.encode(claims=payload, key=private_key, algorithm="ES256")
 
 
