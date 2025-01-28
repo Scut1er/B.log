@@ -1,4 +1,4 @@
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, update
 
 from app.db.db import async_session_maker
 from app.models.users import User
@@ -24,4 +24,8 @@ class UsersRepository(SQLAlchemyRepository):
             if result:
                 return result
 
-
+    async def update_user_verification_status(self, email: str):
+        async with async_session_maker() as session:
+            stmt = update(User).where(User.email == email).values(is_verified=True)
+            await session.execute(stmt)
+            await session.commit()
