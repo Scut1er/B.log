@@ -7,7 +7,6 @@ from app.models.refresh_tokens import RefreshToken
 from app.repositories.repository import SQLAlchemyRepository
 
 
-
 class TokensRepository(SQLAlchemyRepository):
     model = RefreshToken
 
@@ -22,7 +21,7 @@ class TokensRepository(SQLAlchemyRepository):
                 if existing_token:
                     # Обновляем существующий токен
                     query = update(RefreshToken).where(RefreshToken.user_id == user_id).values(
-                        token=token, expires_at=expires_at, created_at=datetime.now(timezone.utc)
+                        token=token, expires_at=expires_at, created_at=datetime.now(timezone.utc).replace(tzinfo=None)
                     ).returning(RefreshToken)
 
                 else:
