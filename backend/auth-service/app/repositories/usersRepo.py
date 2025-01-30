@@ -24,8 +24,9 @@ class UsersRepository(SQLAlchemyRepository):
             if result:
                 return result
 
-    async def update_user_verification_status(self, email: str):
+    async def update_user_verification_status(self, email: str) -> bool:
         async with async_session_maker() as session:
             stmt = update(User).where(User.email == email).values(is_verified=True)
-            await session.execute(stmt)
+            result = await session.execute(stmt)
             await session.commit()
+            return result.rowcount > 0

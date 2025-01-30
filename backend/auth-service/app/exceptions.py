@@ -1,0 +1,61 @@
+from typing import Optional
+
+from fastapi import HTTPException, status
+
+
+class CustomException(HTTPException):
+    status_code = 500
+    detail = ""
+
+    def __init__(self, detail: Optional[str] = None):
+        super().__init__(status_code=self.status_code,
+                         detail=self.detail or detail)
+
+
+class UserNotVerified(CustomException):
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = "User is not verified"
+
+
+class RegistrationFailed(CustomException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "Registration failed"
+
+
+class TokenMissing(CustomException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+
+
+class TokenInvalid(CustomException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    detail = "Token is invalid"
+
+
+class VerificationTokenInvalid(CustomException):
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = "Verification token is invalid"
+
+
+class EmailVerificationFailed(CustomException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "Email verification failed"
+
+
+class InvalidCredentials(CustomException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    detail = "Invalid email or password"
+
+
+class ForbiddenAccess(CustomException):
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = "Access to this resource is forbidden"
+
+
+class RefreshTokenRevoked(CustomException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    detail = "Refresh token has been revoked"
+
+
+class InternalServerError(CustomException):
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    detail = "An internal server error occurred"
