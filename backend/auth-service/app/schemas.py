@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator, ValidationInfo
 
 
 class LoginRequest(BaseModel):
@@ -11,6 +11,20 @@ class LoginRequest(BaseModel):
 
 class RegisterRequest(LoginRequest):
     fullname: Optional[str] = None
+
+
+class ChangePasswordRequest(BaseModel):
+    email: EmailStr
+    old_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def passwords_must_differ(cls, new_password: str, info: ValidationInfo):
+        old_password = info.data.get("old_password")
+        if old_password == new_password:
+            raise ValueError("New password must be different from the old password")
+        return new_password
 
 
 class UserResponseSchema(BaseModel):

@@ -1,5 +1,6 @@
 from typing import Optional
 
+from app.exceptions import UserAlreadyExists
 from app.models.users import User
 from app.repositories.usersRepo import UsersRepository
 from app.utils.helpers import generate_hashed_password, check_password
@@ -14,7 +15,7 @@ class AuthService:
         # Проверяем, существует ли пользователь с данным email
         user_is_exist = await self.users_repository.find_by_email(email)
         if user_is_exist:
-            return None
+            raise UserAlreadyExists
 
         password_info = generate_hashed_password(password)
         user_data = {"email": email,
@@ -32,4 +33,14 @@ class AuthService:
             return None
         if not check_password(password, user.hashed_password, user.salt):
             return None
+        return user
+
+    async def change_password(self, email: str, old_password: str, new_password: str) -> User | None:
+        user = await self.login_user(email, old_password)
+        if not user:
+            return None
+        password_info = generate_hashed_password(new_password)
+        hashed_password = password_info["hashed_password"]
+        salt = password_info["salt"]
+        await self.users_repository.change_password(email, hashed_password, salt)
         return user

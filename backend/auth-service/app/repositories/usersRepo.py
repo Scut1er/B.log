@@ -24,7 +24,14 @@ class UsersRepository(SQLAlchemyRepository):
             if result:
                 return result
 
-    async def update_user_verification_status(self, email: str) -> bool:
+    async def change_password(self, email: str, hashed_password: str, salt: str) -> User | None:
+        async with async_session_maker() as session:
+            stmt = update(User).where(User.email == email).values(hashed_password=hashed_password, salt=salt)
+            result = await session.execute(stmt)
+            await session.commit()
+            return result.rowcount > 0
+
+    async def update_verification_status(self, email: str) -> bool:
         async with async_session_maker() as session:
             stmt = update(User).where(User.email == email).values(is_verified=True)
             result = await session.execute(stmt)

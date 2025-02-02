@@ -14,7 +14,10 @@ class CustomException(HTTPException):
 
 class UserNotVerified(CustomException):
     status_code = status.HTTP_403_FORBIDDEN
-    detail = "User is not verified"
+    detail = "User is not verified. You can verify email at /send-verification-email."
+
+class UserNotExist(CustomException):
+    status_code = status.HTTP_404_NOT_FOUND
 
 
 class RegistrationFailed(CustomException):
@@ -31,9 +34,9 @@ class TokenInvalid(CustomException):
     detail = "Token is invalid"
 
 
-class VerificationTokenInvalid(CustomException):
+class VerificationTokenExpired(CustomException):
     status_code = status.HTTP_403_FORBIDDEN
-    detail = "Verification token is invalid"
+    detail = "The verification token has expired. Request a new verification email."
 
 
 class EmailVerificationFailed(CustomException):
@@ -59,3 +62,8 @@ class RefreshTokenRevoked(CustomException):
 class InternalServerError(CustomException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     detail = "An internal server error occurred"
+
+
+class UserAlreadyExists(CustomException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "User already exists"

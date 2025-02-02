@@ -6,7 +6,7 @@ from fastapi import Response
 from app.config import settings
 
 
-def create_email_verification__token() -> str:
+def create_email_verification_token() -> str:
     """Генерирует уникальный токен для верификации email."""
     return str(uuid.uuid4())
 
