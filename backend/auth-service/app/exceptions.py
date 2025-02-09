@@ -9,12 +9,18 @@ class CustomException(HTTPException):
 
     def __init__(self, detail: Optional[str] = None):
         super().__init__(status_code=self.status_code,
-                         detail=self.detail or detail)
+                         detail=detail if detail is not None else self.detail)
 
 
 class UserNotVerified(CustomException):
     status_code = status.HTTP_403_FORBIDDEN
     detail = "User is not verified. You can verify email at /send-verification-email."
+
+
+class UserAlreadyVerified(CustomException):
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = "User is already verified."
+
 
 class UserNotExist(CustomException):
     status_code = status.HTTP_404_NOT_FOUND
@@ -67,3 +73,8 @@ class InternalServerError(CustomException):
 class UserAlreadyExists(CustomException):
     status_code = status.HTTP_409_CONFLICT
     detail = "User already exists"
+
+
+class InvalidEmail(CustomException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "Email is incorrect"

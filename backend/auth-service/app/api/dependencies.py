@@ -1,7 +1,8 @@
 # app/dependencies.py
 from fastapi import Request, Depends
 
-from app.exceptions import TokenMissing, TokenInvalid
+from app.exceptions import TokenMissing, TokenInvalid, UserNotExist, UserNotVerified, UserAlreadyVerified
+from app.models.users import User
 from app.repositories.redisRepository import RedisRepository
 from app.repositories.tokensRepo import TokensRepository
 from app.repositories.usersRepo import UsersRepository
@@ -49,9 +50,25 @@ def verify_tokens_in_cookies(request: Request):
     return True
 
 
-def get_current_user_id(access_token: str = Depends(get_access_token_from_req)):
+async def get_current_auth_user(access_token: str = Depends(get_access_token_from_req),
+                                auth_service: AuthService = Depends(get_auth_service)) -> User | None:
     decoded_access_token = decode_access_jwt(access_token)
-    user_id = decoded_access_token.get("user_id")
-    if not user_id:
+    user_id = int(decoded_access_token.get("user_id"))
+    if not decoded_access_token or not user_id:
         raise TokenInvalid
-    return user_id
+    user = await auth_service.users_repository.find_by_id(user_id)
+    if not user:
+        raise UserNotExist
+    return user
+
+
+async def get_current_verified_user(user: User = Depends(get_current_auth_user)) -> User:
+    if not user.is_verified:
+        raise UserNotVerified
+    return user
+
+
+async def get_current_unverified_user(user: User = Depends(get_current_auth_user)) -> User:
+    if user.is_verified:
+        raise UserAlreadyVerified
+    return user

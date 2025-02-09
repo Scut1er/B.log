@@ -26,6 +26,10 @@ def set_token_cookie(response: Response, token_type: str, token: str) -> None:
     }
     response.set_cookie(key=key, value=token, **cookie_params)
 
+def clear_token_cookies(response: Response):
+    response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token")
+
 
 def generate_hashed_password(password) -> dict:
     salt = bcrypt.gensalt()

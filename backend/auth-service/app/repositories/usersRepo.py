@@ -24,7 +24,7 @@ class UsersRepository(SQLAlchemyRepository):
             if result:
                 return result
 
-    async def change_password(self, email: str, hashed_password: str, salt: str) -> User | None:
+    async def update_password(self, email: str, hashed_password: str, salt: str) -> bool:
         async with async_session_maker() as session:
             stmt = update(User).where(User.email == email).values(hashed_password=hashed_password, salt=salt)
             result = await session.execute(stmt)

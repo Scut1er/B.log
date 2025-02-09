@@ -46,7 +46,7 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ./backend/auth-service/app/migrations:/auth-service/app/migrations
+       - ./backend/auth-service:/auth-service
     networks:
       - custom_network
 

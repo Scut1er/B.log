@@ -36,4 +36,3 @@ class TokenService:
 
     async def revoke_refresh_token(self, refresh_token: str) -> None:
         await self.token_repository.delete_refresh_token(refresh_token)
-

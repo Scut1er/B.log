@@ -35,12 +35,8 @@ class AuthService:
             return None
         return user
 
-    async def change_password(self, email: str, old_password: str, new_password: str) -> User | None:
-        user = await self.login_user(email, old_password)
-        if not user:
-            return None
+    async def change_password(self, email: str, new_password: str) -> bool:
         password_info = generate_hashed_password(new_password)
         hashed_password = password_info["hashed_password"]
         salt = password_info["salt"]
-        await self.users_repository.change_password(email, hashed_password, salt)
-        return user
+        return await self.users_repository.update_password(email, hashed_password, salt)

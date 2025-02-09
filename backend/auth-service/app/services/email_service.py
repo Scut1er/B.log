@@ -36,9 +36,10 @@ class EmailService:
         )
         logger.info(f"Email sent to {recipient_email} with subject: {subject}")
 
-    async def send_email_verification(self, recipient_email: str, token: str) -> None:
+    async def send_email_verification(self, recipient_email: str) -> None:
+        verification_token = await self.generate_email_verification_token(recipient_email)
         """Отправка письма для верификации email"""
-        verification_link = f"http://{self.service_host}:{self.service_port}/verify-email?email={recipient_email}&token={token}"
+        verification_link = f"http://{self.service_host}:{self.service_port}/verify-email?email={recipient_email}&token={verification_token}"
         body = f"""
         Hello!
 
