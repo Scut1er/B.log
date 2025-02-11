@@ -33,6 +33,12 @@ class ChangePasswordRequest(BaseModel):
         return new_password
 
 
+class ChangeEmailRequest(LoginRequest):
+    current_email: EmailStr
+    password: str
+    new_email: EmailStr
+
+
 class UserResponseSchema(BaseModel):
     id: int
     email: str

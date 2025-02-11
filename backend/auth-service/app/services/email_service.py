@@ -55,8 +55,13 @@ class EmailService:
 
     async def send_password_change_notification(self, email: str):
         """Отправка уведомления о смене пароля"""
-        body = "Your password has been changed. If this was not you, please contact support immediately."
+        body = "Your account password has been changed. If this was not you, please contact support immediately."
         await self.send_email(email, "Password Changed", body)
+
+    async def send_email_change_notification(self, email: str, new_email: str):
+        """Отправка уведомления о смене email"""
+        body = f"Your account email has been changed to {new_email}. If this was not you, please contact support immediately."
+        await self.send_email(email, "Email Changed", body)
 
     async def generate_email_verification_token(self, email: str) -> str:
         verification_token = create_email_verification_token()

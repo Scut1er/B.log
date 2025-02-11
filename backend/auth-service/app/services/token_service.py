@@ -1,8 +1,10 @@
 from datetime import datetime, timezone, timedelta
 
 from app.config import settings
+from app.exceptions import RefreshTokenInvalid
 from app.repositories.tokensRepo import TokensRepository
 from app.utils.crypto import create_jwt_token, decode_refresh_jwt
+from app.utils.helpers import set_token_cookie
 
 
 class TokenService:
@@ -23,9 +25,34 @@ class TokenService:
         await self.token_repository.save_refresh_token(user_id, refresh_token, expires_at)
         return refresh_token
 
+    async def get_or_create_refresh_token(self, user_id):
+        """Checks the existence and validity of Refresh token.
+        If the token does not exist or invalid, creates a new one."""
+        existing_token_record = await self.token_repository.get_refresh_token_by_user_id(user_id)
+
+        if existing_token_record:
+            is_valid = await self.token_repository.is_refresh_token_valid(existing_token_record.token)
+            if is_valid:
+                return existing_token_record.token
+            raise RefreshTokenInvalid
+
+        # Create a new refresh token if the old one was not found
+        return await self.generate_refresh_token(user_id)
+
+    async def generate_tokens_cookies(self, user_id, response):
+        # Generate tokens for the user
+        access_token = await self.generate_access_token(user_id)
+        refresh_token = await self.get_or_create_refresh_token(user_id)
+
+        # Set tokens in cookies
+        set_token_cookie(response, "access", access_token)
+        set_token_cookie(response, "refresh", refresh_token)
+
+        return access_token, refresh_token
+
     async def refresh_access_token(self, refresh_token: str) -> str:
         if not await (self.token_repository.is_refresh_token_valid(refresh_token)):
-            raise Exception("Refresh token is invalid or expired")  # ИСПРАВИТЬ НА ОШИБКУ КАСТОМНУЮ!!!
+            raise RefreshTokenInvalid
 
         # Декодируем refresh-токен и получаем user_id
         payload = decode_refresh_jwt(refresh_token)

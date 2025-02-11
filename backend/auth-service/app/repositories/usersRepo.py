@@ -31,9 +31,16 @@ class UsersRepository(SQLAlchemyRepository):
             await session.commit()
             return result.rowcount > 0
 
-    async def update_verification_status(self, email: str) -> bool:
+    async def update_email(self, old_email: str, new_email: str) -> bool:
         async with async_session_maker() as session:
-            stmt = update(User).where(User.email == email).values(is_verified=True)
+            stmt = update(User).where(User.email == old_email).values(email=new_email)
+            result = await session.execute(stmt)
+            await session.commit()
+            return result.rowcount > 0
+
+    async def update_verification_status(self, email: str, status: bool) -> bool:
+        async with async_session_maker() as session:
+            stmt = update(User).where(User.email == email).values(is_verified=status)
             result = await session.execute(stmt)
             await session.commit()
             return result.rowcount > 0

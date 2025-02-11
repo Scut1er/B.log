@@ -40,6 +40,13 @@ class TokensRepository(SQLAlchemyRepository):
             if result:
                 return result
 
+    async def get_refresh_token_by_user_id(self, user_id: int) -> RefreshToken | None:
+        async with async_session_maker() as session:
+            query = select(RefreshToken).where(RefreshToken.user_id == user_id)
+            result = await session.scalar(query)
+            if result:
+                return result
+
     async def is_refresh_token_valid(self, token: str) -> bool:
         """Проверяет, является ли refresh-токен действительным (существует и не истек)"""
         async with async_session_maker() as session:

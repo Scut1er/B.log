@@ -39,6 +39,8 @@ class TokenInvalid(CustomException):
     status_code = status.HTTP_401_UNAUTHORIZED
     detail = "Token is invalid"
 
+class RefreshTokenInvalid(TokenInvalid):
+    detail = "Refresh token is invalid or expired"
 
 class VerificationTokenExpired(CustomException):
     status_code = status.HTTP_403_FORBIDDEN
@@ -78,3 +80,8 @@ class UserAlreadyExists(CustomException):
 class InvalidEmail(CustomException):
     status_code = status.HTTP_400_BAD_REQUEST
     detail = "Email is incorrect"
+
+
+class EmailIsTaken(CustomException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "Email is already taken"
