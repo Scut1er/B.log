@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends, Response, Query, Request
 from app.api.dependencies import get_auth_service, get_email_service, get_token_service, \
     get_refresh_token_from_req, get_current_auth_user, get_current_verified_user, \
     get_current_unverified_user
-from app.exceptions import EmailVerificationFailed, VerificationTokenExpired, InvalidCredentials, \
-    RegistrationFailed, UserAlreadyVerified, InvalidEmail
+from app.exceptions import VerificationTokenExpired, InvalidCredentials, \
+    RegistrationFailed, InvalidEmail, UserNotVerified
 from app.models.users import User
 
 from app.schemas import TokensResponse, RegisterRequest, LoginRequest, ChangePasswordRequest, MessageResponse, \
@@ -12,7 +12,7 @@ from app.schemas import TokensResponse, RegisterRequest, LoginRequest, ChangePas
 from app.services.auth_service import AuthService
 from app.services.email_service import EmailService
 from app.services.token_service import TokenService
-from app.utils.helpers import set_token_cookie, clear_token_cookies
+from app.utils.helpers import clear_token_cookies
 
 router = APIRouter(prefix="/auth", tags=["Auth-service"], )
 
@@ -45,6 +45,8 @@ async def login_user(user_data: LoginRequest,
     user = await auth_service.login_user(email=user_data.email, password=user_data.password)
     if not user:
         raise InvalidCredentials
+    if not user.is_verified:
+        raise UserNotVerified
 
     access, refresh = await token_service.generate_tokens_cookies(user.id, response)
     return TokensResponse(access_token=access,

@@ -39,8 +39,15 @@ class TokenInvalid(CustomException):
     status_code = status.HTTP_401_UNAUTHORIZED
     detail = "Token is invalid"
 
+
+class TokenExpired(CustomException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    detail = "Token is expired"
+
+
 class RefreshTokenInvalid(TokenInvalid):
     detail = "Refresh token is invalid or expired"
+
 
 class VerificationTokenExpired(CustomException):
     status_code = status.HTTP_403_FORBIDDEN

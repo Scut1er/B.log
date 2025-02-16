@@ -1,6 +1,7 @@
 # app/dependencies.py
 from fastapi import Request, Depends
 
+from app.config import settings
 from app.exceptions import TokenMissing, TokenInvalid, UserNotExist, UserNotVerified, UserAlreadyVerified
 from app.models.users import User
 from app.repositories.redisRepository import RedisRepository
@@ -9,7 +10,7 @@ from app.repositories.usersRepo import UsersRepository
 from app.services.auth_service import AuthService
 from app.services.email_service import EmailService
 from app.services.token_service import TokenService
-from app.utils.crypto import decode_access_jwt, decode_refresh_jwt
+from app.utils.crypto import decode_jwt
 
 
 def get_auth_service() -> AuthService:
@@ -44,15 +45,15 @@ def verify_tokens_in_cookies(request: Request):
 
     if not access_token or not refresh_token:
         raise TokenMissing
-    decode_access_jwt(access_token)
-    decode_refresh_jwt(refresh_token)
+    decode_jwt(access_token, settings.ACCESS_PUBLIC_KEY)
+    decode_jwt(refresh_token, settings.REFRESH_PUBLIC_KEY)
 
     return True
 
 
 async def get_current_auth_user(access_token: str = Depends(get_access_token_from_req),
                                 auth_service: AuthService = Depends(get_auth_service)) -> User | None:
-    decoded_access_token = decode_access_jwt(access_token)
+    decoded_access_token = decode_jwt(access_token, settings.ACCESS_PUBLIC_KEY)
     user_id = int(decoded_access_token.get("user_id"))
     if not decoded_access_token or not user_id:
         raise TokenInvalid

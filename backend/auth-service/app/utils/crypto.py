@@ -3,24 +3,16 @@ from datetime import datetime
 from jose import jwt
 
 from app.config import settings
+from app.exceptions import TokenInvalid, TokenExpired
 
 
-def decode_access_jwt(token: str) -> dict:
+def decode_jwt(token: str, key: str) -> dict:
     try:
-        return jwt.decode(token=token, key=settings.ACCESS_PUBLIC_KEY, algorithms=["ES256"])
+        return jwt.decode(token=token, key=key, algorithms=["ES256"])
     except jwt.ExpiredSignatureError:
-        raise Exception("Token has expired")
+        raise TokenExpired
     except jwt.JWTError:
-        raise Exception("Invalid token")
-
-
-def decode_refresh_jwt(token: str) -> dict:
-    try:
-        return jwt.decode(token=token, key=settings.REFRESH_PUBLIC_KEY, algorithms=["ES256"])
-    except jwt.ExpiredSignatureError:
-        raise Exception("Token has expired")
-    except jwt.JWTError:
-        raise Exception("Invalid token")
+        raise TokenInvalid
 
 
 def create_jwt_token(user_id: int,

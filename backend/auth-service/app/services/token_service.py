@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from app.config import settings
 from app.exceptions import RefreshTokenInvalid
 from app.repositories.tokensRepo import TokensRepository
-from app.utils.crypto import create_jwt_token, decode_refresh_jwt
+from app.utils.crypto import create_jwt_token, decode_jwt
 from app.utils.helpers import set_token_cookie
 
 
@@ -55,7 +55,7 @@ class TokenService:
             raise RefreshTokenInvalid
 
         # Декодируем refresh-токен и получаем user_id
-        payload = decode_refresh_jwt(refresh_token)
+        payload = decode_jwt(refresh_token, settings.REFRESH_PUBLIC_KEY)
         user_id = int(payload["user_id"])
 
         new_access_token = await self.generate_access_token(user_id)

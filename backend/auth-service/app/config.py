@@ -18,20 +18,25 @@ class Settings(BaseSettings):
 
     VERIFICATION_TOKEN_EXPIRE_TIME_MINUTES: str
     VERIFICATION_SECRET_KEY: str
+    PREVIOUS_VERIFICATION_SECRET_KEY: str
 
     ACCESS_TOKEN_EXPIRE_TIME_MINUTES: str
     ACCESS_PRIVATE_KEY: str
     ACCESS_PUBLIC_KEY: str
+    PREVIOUS_ACCESS_PRIVATE_KEY: str
+    PREVIOUS_ACCESS_PUBLIC_KEY: str
 
     REFRESH_TOKEN_EXPIRE_TIME_MINUTES: str
     REFRESH_PRIVATE_KEY: str
     REFRESH_PUBLIC_KEY: str
+    PREVIOUS_REFRESH_PRIVATE_KEY: str
+    PREVIOUS_REFRESH_PUBLIC_KEY: str
 
     @property
     def DATABASE_URL(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=(".env", ".env.keys"))
 
 
 settings = Settings()

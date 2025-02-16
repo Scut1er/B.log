@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import select, insert, delete, update
+from sqlalchemy import select, delete, update
+from sqlalchemy.dialects.postgresql import insert
 
 from app.db.db import async_session_maker
 from app.models.refresh_tokens import RefreshToken
@@ -11,24 +12,20 @@ class TokensRepository(SQLAlchemyRepository):
     model = RefreshToken
 
     async def save_refresh_token(self, user_id: int, token: str, expires_at: datetime) -> RefreshToken:
-        """Сохранение refresh-токена в базе данных.
-        Если для пользователя уже существует токен, он перезаписывается."""
+        """Saves RefreshToken in the database.
+        If a token already exists for the user, it is rewritten."""
         async with async_session_maker() as session:
             async with session.begin():
-                # Проверяем, существует ли уже токен для этого пользователя
-                existing_token_query = select(RefreshToken).where(RefreshToken.user_id == user_id)
-                existing_token = await session.scalar(existing_token_query)
-                if existing_token:
-                    # Обновляем существующий токен
-                    query = update(RefreshToken).where(RefreshToken.user_id == user_id).values(
-                        token=token, expires_at=expires_at, created_at=datetime.now(timezone.utc).replace(tzinfo=None)
-                    ).returning(RefreshToken)
-
-                else:
-                    # Вставляем новый токен, если его нет
-                    query = insert(RefreshToken).values(
-                        user_id=user_id, token=token, expires_at=expires_at
-                    ).returning(RefreshToken)
+                query = insert(RefreshToken).values(
+                    user_id=user_id, token=token, expires_at=expires_at
+                ).on_conflict_do_update(  # If the user has a token, we replace it with a new
+                    index_elements=[RefreshToken.user_id],
+                    set_={
+                        "token": token,
+                        "expires_at": expires_at,
+                        "created_at": datetime.now(timezone.utc).replace(tzinfo=None)
+                    }
+                ).returning(RefreshToken)
                 result = await session.execute(query)
                 await session.commit()
                 return result.scalar_one()
@@ -52,7 +49,7 @@ class TokensRepository(SQLAlchemyRepository):
         async with async_session_maker() as session:
             query = select(RefreshToken).where(
                 RefreshToken.token == token,
-                RefreshToken.expires_at > datetime.now(timezone.utc)
+                RefreshToken.expires_at > datetime.now(timezone.utc).replace(tzinfo=None)
             )
             result = await session.scalar(query)
             return result is not None
