@@ -60,6 +60,7 @@ async def logout_user(response: Response,
                       request: Request,
                       current_user: User = Depends(get_current_auth_user),
                       token_service: TokenService = Depends(get_token_service)):
+    # Проверка аутентификации пользователя выполняется через зависимость get_current_auth_user
     refresh_token = get_refresh_token_from_req(request)
     await token_service.revoke_refresh_token(refresh_token)
 
@@ -76,13 +77,13 @@ async def change_password(user_data: ChangePasswordRequest,
                           current_user: User = Depends(get_current_verified_user),
                           auth_service: AuthService = Depends(get_auth_service),
                           email_service: EmailService = Depends(get_email_service)):
-    # User verification is checked through get_current_verified_user dependency
+    # Проверка верификации пользователя выполняется через зависимость get_current_verified_user
     if user_data.email != current_user.email:
         raise InvalidEmail
 
     await auth_service.change_password(user_data.email, user_data.old_password, user_data.new_password)
 
-    # Send notification to user
+    # Отправка уведомления о смене пароля
     await email_service.send_password_change_notification(user_data.email)
 
     return {"message": "Password changed successfully."}
@@ -95,16 +96,16 @@ async def change_email(user_data: ChangeEmailRequest,
                        current_user: User = Depends(get_current_verified_user),
                        auth_service: AuthService = Depends(get_auth_service),
                        email_service: EmailService = Depends(get_email_service)):
-    # User verification is checked through get_current_verified_user dependency
+    # Проверка верификации пользователя выполняется через зависимость get_current_verified_user
     if user_data.current_email != current_user.email:
         raise InvalidEmail
 
-    # Сhange email and reset verification status
+    # Изменение email и сброс статуса верификации
     await auth_service.change_email(user_data.password, user_data.current_email, user_data.new_email)
 
-    # Send a notify letter to the old email about changing the email
+    # Отправка уведомления на старый email о смене почты
     await email_service.send_email_change_notification(user_data.current_email, user_data.new_email)
-    # send a verification letter to the new email
+    # Отправка письма с верификацией на новый email
     await email_service.send_email_verification(user_data.new_email)
 
 

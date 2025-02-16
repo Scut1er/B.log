@@ -48,7 +48,6 @@ class AuthService:
             raise EmailVerificationFailed
         return user_is_updated
 
-
     async def change_password(self, email: str, current_password: str, new_password: str) -> bool:
         user = await self.login_user(email, current_password)  # Check the old password
         if not user:
@@ -60,16 +59,16 @@ class AuthService:
         return await self.users_repository.update_password(email, hashed_password, salt)
 
     async def change_email(self, password: str, current_email: str, new_email: str) -> bool:
-        # Check if the new mail is occupied by another account
+        # Проверка не занят ли новый email другим пользователем
         email_is_taken = await self.users_repository.find_by_email(new_email)
         if email_is_taken:
             raise EmailIsTaken
 
-        # Check the credentials
+        # Проверка данных входа
         user = await self.login_user(current_email, password)
         if not user:
             raise InvalidCredentials
 
-        # Change the user's email and reset verification
+        # Изменение email пользователя и обнуление его верификации
         await self.users_repository.update_email(current_email, new_email)
         return await self.users_repository.update_verification_status(new_email, False)

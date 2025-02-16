@@ -40,8 +40,11 @@ class TokenInvalid(CustomException):
     detail = "Token is invalid"
 
 
-class TokenExpired(CustomException):
-    status_code = status.HTTP_401_UNAUTHORIZED
+class TokenVerificationFailed(TokenInvalid):
+    detail = "The process of verification of tokens was failed"
+
+
+class TokenExpired(TokenInvalid):
     detail = "Token is expired"
 
 
@@ -49,7 +52,7 @@ class RefreshTokenInvalid(TokenInvalid):
     detail = "Refresh token is invalid or expired"
 
 
-class VerificationTokenExpired(CustomException):
+class VerificationTokenExpired(TokenInvalid):
     status_code = status.HTTP_403_FORBIDDEN
     detail = "The verification token has expired. Request a new verification email."
 
@@ -67,11 +70,6 @@ class InvalidCredentials(CustomException):
 class ForbiddenAccess(CustomException):
     status_code = status.HTTP_403_FORBIDDEN
     detail = "Access to this resource is forbidden"
-
-
-class RefreshTokenRevoked(CustomException):
-    status_code = status.HTTP_401_UNAUTHORIZED
-    detail = "Refresh token has been revoked"
 
 
 class InternalServerError(CustomException):

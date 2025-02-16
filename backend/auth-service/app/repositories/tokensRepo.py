@@ -12,13 +12,13 @@ class TokensRepository(SQLAlchemyRepository):
     model = RefreshToken
 
     async def save_refresh_token(self, user_id: int, token: str, expires_at: datetime) -> RefreshToken:
-        """Saves RefreshToken in the database.
-        If a token already exists for the user, it is rewritten."""
+        """Сохраняет RefreshToken в базе данных.
+        Если токен уже существует для пользователя, он перезаписывается."""
         async with async_session_maker() as session:
             async with session.begin():
                 query = insert(RefreshToken).values(
                     user_id=user_id, token=token, expires_at=expires_at
-                ).on_conflict_do_update(  # If the user has a token, we replace it with a new
+                ).on_conflict_do_update(  # Если у пользователя уже есть токен, заменяем его новым
                     index_elements=[RefreshToken.user_id],
                     set_={
                         "token": token,
