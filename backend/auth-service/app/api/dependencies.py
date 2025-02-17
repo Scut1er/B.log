@@ -1,9 +1,8 @@
 # app/dependencies.py
-from fastapi import Request, Depends
+from fastapi import Request, Depends, Response
 
-from app.config import settings
 from app.exceptions import TokenMissing, TokenInvalid, UserNotExist, UserNotVerified, UserAlreadyVerified, \
-    TokenVerificationFailed
+    ForbiddenAccess
 from app.models.users import User
 from app.repositories.redisRepository import RedisRepository
 from app.repositories.tokensRepo import TokensRepository
@@ -11,7 +10,8 @@ from app.repositories.usersRepo import UsersRepository
 from app.services.auth_service import AuthService
 from app.services.email_service import EmailService
 from app.services.token_service import TokenService
-from app.utils.crypto import decode_jwt, decode_token_with_public_keys
+from app.utils.crypto import decode_token_with_public_keys
+from app.utils.helpers import set_token_cookie
 from app.utils.key_manager import KeyManager
 
 
@@ -31,18 +31,30 @@ def get_key_manager() -> KeyManager:
     return KeyManager()
 
 
-def get_refresh_token_from_req(request: Request):
+def get_refresh_token_from_req(request: Request) -> str:
     token = request.cookies.get("refresh_token")
     if not token:
         raise TokenMissing
     return token
 
 
-def get_access_token_from_req(request: Request):
-    token = request.cookies.get("access_token")
-    if not token:
-        raise TokenMissing
-    return token
+async def get_access_token_from_req(request: Request,
+                                    response: Response,
+                                    token_service: TokenService = Depends(get_token_service)) -> str:
+    access_token = request.cookies.get("access_token")
+    if access_token:
+        return access_token
+
+    # Если access_token отсутствует, пробуем получить refresh_token
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise TokenMissing  # Ни одного токена нет — кидаем исключение
+
+    # Пытаемся обновить access_token
+    new_access_token = await token_service.refresh_access_token(refresh_token)
+
+    set_token_cookie(response, "access", new_access_token)
+    return new_access_token
 
 
 async def get_current_auth_user(access_token: str = Depends(get_access_token_from_req),
@@ -69,6 +81,12 @@ async def get_current_unverified_user(user: User = Depends(get_current_auth_user
     if user.is_verified:
         raise UserAlreadyVerified
     return user
+
+
+async def get_current_admin_user(user: User = Depends(get_current_auth_user)) -> User:
+    if user.role_id == 2:
+        return user
+    raise ForbiddenAccess
 
 
 """def verify_tokens_in_cookies(request: Request, key_manager: KeyManager = Depends(get_key_manager)):

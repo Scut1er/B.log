@@ -2,28 +2,31 @@ from fastapi import APIRouter, Depends, Response, Query, Request
 
 from app.api.dependencies import get_auth_service, get_email_service, get_token_service, \
     get_refresh_token_from_req, get_current_auth_user, get_current_verified_user, \
-    get_current_unverified_user
+    get_current_unverified_user, get_key_manager, get_current_admin_user
 from app.exceptions import VerificationTokenExpired, InvalidCredentials, \
-    RegistrationFailed, InvalidEmail, UserNotVerified
+    RegistrationFailed, InvalidEmail
 from app.models.users import User
 
-from app.schemas import TokensResponse, RegisterRequest, LoginRequest, ChangePasswordRequest, MessageResponse, \
-    ChangeEmailRequest
+from app.schemas import RegisterRequest, LoginRequest, ChangePasswordRequest, MessageResponse, \
+    ChangeEmailRequest, TokensResponse
 from app.services.auth_service import AuthService
 from app.services.email_service import EmailService
 from app.services.token_service import TokenService
 from app.utils.helpers import clear_token_cookies
+from app.utils.key_manager import KeyManager
 
 router = APIRouter(prefix="/auth", tags=["Auth-service"], )
 
 
-@router.post("/register", response_model=MessageResponse,
+@router.post("/register", response_model=TokensResponse,
              summary="Register a new user",
-             description="Creates a new user with the specified email, password, and optional full name. "
+             description="Creates a new user with the specified email, password, and optional fullname. "
                          "After successful registration, a verification email is sent to the provided email address.")
 async def register_user(user_data: RegisterRequest,
+                        response: Response,
                         auth_service: AuthService = Depends(get_auth_service),
-                        email_service: EmailService = Depends(get_email_service)):
+                        email_service: EmailService = Depends(get_email_service),
+                        token_service: TokenService = Depends(get_token_service)):
     user = await auth_service.register_user(email=user_data.email,
                                             password=user_data.password,
                                             fullname=user_data.fullname)
@@ -31,7 +34,10 @@ async def register_user(user_data: RegisterRequest,
         raise RegistrationFailed
 
     await email_service.send_email_verification(user_data.email)
-    return {"message": "User registered successfully. Please verify your email."}
+
+    access, refresh = await token_service.generate_tokens_cookies(user.id, response)
+    return TokensResponse(access_token=access, refresh_token=refresh,
+                          message="You were successfully registrated. Please verify your email", )
 
 
 @router.post("/login", response_model=TokensResponse,
@@ -45,12 +51,10 @@ async def login_user(user_data: LoginRequest,
     user = await auth_service.login_user(email=user_data.email, password=user_data.password)
     if not user:
         raise InvalidCredentials
-    if not user.is_verified:
-        raise UserNotVerified
 
     access, refresh = await token_service.generate_tokens_cookies(user.id, response)
-    return TokensResponse(access_token=access,
-                          refresh_token=refresh)
+    return TokensResponse(access_token=access, refresh_token=refresh,
+                          message="You have successfully entered your account")
 
 
 @router.post("/logout", response_model=MessageResponse,
@@ -66,7 +70,7 @@ async def logout_user(response: Response,
 
     clear_token_cookies(response)
 
-    return {"message": "User logged out successfully."}
+    return MessageResponse(message="User logged out successfully")
 
 
 @router.post("/change-password", response_model=MessageResponse,
@@ -86,7 +90,7 @@ async def change_password(user_data: ChangePasswordRequest,
     # Отправка уведомления о смене пароля
     await email_service.send_password_change_notification(user_data.email)
 
-    return {"message": "Password changed successfully."}
+    return MessageResponse(message="Password changed successfully.")
 
 
 @router.post("/change-email", response_model=MessageResponse,
@@ -108,17 +112,23 @@ async def change_email(user_data: ChangeEmailRequest,
     # Отправка письма с верификацией на новый email
     await email_service.send_email_verification(user_data.new_email)
 
+    return MessageResponse(message="Email successfully changed.")
+
 
 @router.post("/send-verification-email", response_model=MessageResponse,
              summary="Send email verification",
              description="Sends an email with a verification token to users "
                          "whose accounts are not yet verified.")
-async def send_verification_email(email_service: EmailService = Depends(get_email_service),
+async def send_verification_email(email: str,
+                                  email_service: EmailService = Depends(get_email_service),
                                   current_user: User = Depends(get_current_unverified_user)):
-    recipient_email = current_user.email
-    await email_service.send_email_verification(recipient_email)
+    # НУЖНО ОГРАНИЧИТЬ ВОЗМОЖНОСТЬ ОТПРАВКИ ЗАПРОСА, ВОЗМОЖНО ЧЕРЕЗ nginx
+    # Проверка отсутствия верификации пользователя выполняется через зависимость get_current_unverified_user
+    if email != current_user.email:
+        raise InvalidEmail
+    await email_service.send_email_verification(email)
 
-    return {"message": "Verification token has been sent to your email."}
+    return MessageResponse(message="Verification token has been sent to your email.")
 
 
 @router.get("/verify-email", response_model=MessageResponse,
@@ -132,18 +142,27 @@ async def verify_email(email: str = Query(...), token: str = Query(...),
         raise VerificationTokenExpired
 
     await auth_service.verify_user_by_email(email)
-    return {"message": "Email successfully verified"}
+    return MessageResponse(message="Email successfully verified")
 
 
 @router.get("/protected-auth-endpoint", response_model=MessageResponse,
             summary="Access for authorized users",
             description="Endpoint accessible only to authorized users.")
 async def protected_auth_endpoint(current_user: User = Depends(get_current_auth_user)):
-    return {"message": "You have access to authorized endpoint", "user": current_user}
+    # Проверка аутентификации пользователя выполняется через зависимость get_current_auth_user
+    return MessageResponse(message="You have access to authorized endpoint")
 
 
 @router.get("/protected-verify-endpoint", response_model=MessageResponse,
             summary="Access for verified users",
             description="Endpoint accessible only to users with verified email.")
 async def protected_verify_endpoint(current_user: User = Depends(get_current_verified_user)):
-    return {"message": "You have access to verified endpoint", "user": current_user}
+    # Проверка верификации пользователя выполняется через зависимость get_current_verified_user
+    return MessageResponse(message="You have access to verified endpoint")
+
+
+@router.post("/rotate-keys", summary="Rotate JWT keys")
+async def rotate_keys(key_manager: KeyManager = Depends(get_key_manager),
+                      current_admin_user: User = Depends(get_current_admin_user)):
+    key_manager.rotate_keys()
+    return MessageResponse(message="🔑 Ключи успешно обновлены")

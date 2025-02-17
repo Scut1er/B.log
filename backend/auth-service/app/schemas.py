@@ -22,7 +22,7 @@ class RegisterRequest(BaseModel):
 class ChangePasswordRequest(BaseModel):
     email: EmailStr
     old_password: str
-    new_password: str
+    new_password: str = Field(min_length=8, description="Password must be at least 8 characters long")
 
     @field_validator("new_password")
     @classmethod
@@ -33,10 +33,18 @@ class ChangePasswordRequest(BaseModel):
         return new_password
 
 
-class ChangeEmailRequest(LoginRequest):
+class ChangeEmailRequest(BaseModel):
     current_email: EmailStr
     password: str
     new_email: EmailStr
+
+    @field_validator("new_email")
+    @classmethod
+    def email_must_differ(cls, new_email: EmailStr, info: ValidationInfo):
+        current_email = info.data.get("current_email")
+        if current_email == new_email:
+            raise ValueError("New email must be different from the old email")
+        return new_email
 
 
 class UserResponseSchema(BaseModel):
@@ -61,3 +69,4 @@ class RefreshTokenSchema(BaseModel):
 class TokensResponse(BaseModel):
     access_token: str
     refresh_token: str
+    message: str

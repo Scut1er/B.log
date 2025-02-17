@@ -39,7 +39,7 @@ class EmailService:
     async def send_email_verification(self, recipient_email: str) -> None:
         verification_token = await self.generate_email_verification_token(recipient_email)
         """Отправка письма для верификации email"""
-        verification_link = f"http://{self.service_host}:{self.service_port}/verify-email?email={recipient_email}&token={verification_token}"
+        verification_link = f"http://{self.service_host}:{self.service_port}/auth/verify-email?email={recipient_email}&token={verification_token}"
         body = f"""
         Hello!
 
