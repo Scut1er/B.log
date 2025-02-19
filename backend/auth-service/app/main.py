@@ -1,8 +1,10 @@
 import uvicorn
 from fastapi import FastAPI, Request
+from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import JSONResponse
 
 from app.api.auth import router as auth_router
+from app.api.auth import oauth_router as oauth_router
 from app.logger import logger
 from middlewares.exception_middleware import ExceptionMiddleware
 
@@ -20,6 +22,8 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 
 app.include_router(auth_router)
+app.add_middleware(SessionMiddleware, secret_key="adsasdasasd")
+app.include_router(oauth_router)
 # заменил ExceptionMiddleware на general_exception_handler (логированием занимается FastAPI)
 """app.add_middleware(ExceptionMiddleware)"""
 

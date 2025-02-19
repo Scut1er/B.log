@@ -28,11 +28,14 @@ class Settings(BaseSettings):
     REFRESH_PUBLIC_KEY: str
     PREVIOUS_REFRESH_PUBLIC_KEY: str
 
+    GOOGLE_CLIENT_ID: str
+    GOOGLE_CLIENT_SECRET: str
+
     @property
     def DATABASE_URL(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
-    model_config = SettingsConfigDict(env_file=(".env", ".env.keys"))
+    model_config = SettingsConfigDict(env_file=(".env", ".env.keys", ".env.oauth"))
 
 
 settings = Settings()

@@ -14,8 +14,10 @@ from app.services.email_service import EmailService
 from app.services.token_service import TokenService
 from app.utils.helpers import clear_token_cookies
 from app.utils.key_manager import KeyManager
+from app.utils.oauth import oauth
 
 router = APIRouter(prefix="/auth", tags=["Auth-service"], )
+oauth_router = APIRouter(prefix="/oauth", tags=["OAuth"])
 
 
 @router.post("/register", response_model=TokensResponse,
@@ -166,3 +168,36 @@ async def rotate_keys(key_manager: KeyManager = Depends(get_key_manager),
                       current_admin_user: User = Depends(get_current_admin_user)):
     key_manager.rotate_keys()
     return MessageResponse(message="🔑 Ключи успешно обновлены")
+
+
+@oauth_router.get("/{provider}/login")
+async def oauth_login(provider: str, request: Request):
+    client = oauth.create_client(provider)
+    if not client:
+        return {"error": "Unsupported provider"}
+
+    redirect_uri = request.url_for("oauth_callback", provider=provider)
+    print(redirect_uri)
+    return await client.authorize_redirect(request, redirect_uri)
+
+
+# Callback после успешного входа
+@oauth_router.get("/{provider}/callback")
+async def oauth_callback(provider: str, request: Request, response: Response,
+                         auth_service: AuthService = Depends(get_auth_service),
+                         token_service: TokenService = Depends(get_token_service)):
+    client = oauth.create_client(provider)
+    if not client:
+        return {"error": "Unsupported provider"}
+
+    token = await client.authorize_access_token(request)
+
+    userinfo = await client.userinfo(token=token)
+    print(userinfo)
+
+    user = await auth_service.login_or_register_oauth_user(provider, userinfo)
+    access, refresh = await token_service.generate_tokens_cookies(user.id, response)
+
+    return TokensResponse(access_token=access, refresh_token=refresh,
+                          message="You were successfully registrated.")
+

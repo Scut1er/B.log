@@ -1,6 +1,7 @@
 from sqlalchemy import select, insert, update
 
 from app.db.db import async_session_maker
+from app.models.oauth_accounts import OAuthAccount
 from app.models.users import User
 from app.repositories.repository import SQLAlchemyRepository
 
@@ -15,6 +16,30 @@ class UsersRepository(SQLAlchemyRepository):
             result = await session.execute(stmt)
             await session.commit()
             return result.fetchone()
+
+
+# может быть переделать !!!!!!!!!!!!
+    async def create_oauth_user(self, email: str, fullname: str, provider: str, provider_id: str) -> User:
+        user_data = {"email": email, "fullname": fullname, "is_verified": True}
+        async with async_session_maker() as session:
+            async with session.begin():
+                # Вставляем пользователя и сразу получаем его id
+                stmt_user = insert(User).values(**user_data).returning(User.id, User.email, User.fullname,
+                                                                       User.is_verified)
+                result = await session.execute(stmt_user)
+                user_row = result.fetchone()
+
+                if not user_row:
+                    raise ValueError("Ошибка создания пользователя")
+
+                # Создаем запись OAuth-аккаунта
+                stmt_oauth = insert(OAuthAccount).values(user_id=user_row.id, provider=provider,
+                                                         provider_id=provider_id)
+                await session.execute(stmt_oauth)
+
+            await session.commit()
+            return User(id=user_row.id, email=user_row.email, fullname=user_row.fullname,
+                        is_verified=user_row.is_verified)
 
     async def find_by_email(self, email: str) -> User | None:
         """Получение записи по email"""

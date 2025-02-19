@@ -11,6 +11,7 @@ from app.db.db import Base
 from app.models.users import User
 from app.models.roles import Role
 from app.models.refresh_tokens import RefreshToken
+from app.models.oauth_accounts import OAuthAccount
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

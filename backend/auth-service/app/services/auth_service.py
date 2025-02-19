@@ -36,6 +36,20 @@ class AuthService:
             return None
         return user
 
+    async def login_or_register_oauth_user(self, provider: str, userinfo: dict) -> User:
+        email = userinfo.get("email")
+        existing_user = await self.users_repository.find_by_email(email)
+
+        if not existing_user:
+            user = await self.users_repository.create_oauth_user(
+                email=email,
+                fullname=userinfo.get("name"),
+                provider=provider,
+                provider_id=userinfo.get("sub"),
+            )
+            return user
+        return existing_user
+
     async def verify_user_by_email(self, email: str) -> bool:
         user = await self.users_repository.find_by_email(email)
         if not user:
