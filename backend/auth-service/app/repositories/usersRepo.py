@@ -24,8 +24,7 @@ class UsersRepository(SQLAlchemyRepository):
         async with async_session_maker() as session:
             async with session.begin():
                 # Вставляем пользователя и сразу получаем его id
-                stmt_user = insert(User).values(**user_data).returning(User.id, User.email, User.fullname,
-                                                                       User.is_verified)
+                stmt_user = insert(User).values(**user_data).returning(User.__table__.columns)
                 result = await session.execute(stmt_user)
                 user_row = result.fetchone()
 

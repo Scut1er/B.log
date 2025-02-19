@@ -87,6 +87,10 @@ class InvalidEmail(CustomException):
     detail = "Email is incorrect"
 
 
+class NotFoundEmailOAuth(InvalidEmail):
+    detail = "Failed to get an email from the Oauth-provider"
+
+
 class EmailIsTaken(CustomException):
     status_code = status.HTTP_409_CONFLICT
     detail = "Email is already taken"

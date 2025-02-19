@@ -16,17 +16,7 @@ oauth.register(
     client_kwargs={"scope": "openid email profile"},
     jwks_uri="https://www.googleapis.com/oauth2/v3/certs",
 )
-"""
-# Регистрация VK OAuth
-oauth.register(
-    name="vk",
-    client_id=settings.VK_CLIENT_ID,
-    client_secret=settings.VK_CLIENT_SECRET,
-    authorize_url="https://oauth.vk.com/authorize",
-    authorize_params={"scope": "email"},
-    access_token_url="https://oauth.vk.com/access_token",
-    client_kwargs={"scope": "email"},
-)
+
 
 # Регистрация Yandex OAuth
 oauth.register(
@@ -35,6 +25,7 @@ oauth.register(
     client_secret=settings.YANDEX_CLIENT_SECRET,
     authorize_url="https://oauth.yandex.ru/authorize",
     access_token_url="https://oauth.yandex.ru/token",
+    userinfo_endpoint="https://login.yandex.ru/info",
     client_kwargs={"scope": "login:email login:info"},
 )
-"""
+

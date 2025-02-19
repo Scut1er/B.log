@@ -6,7 +6,7 @@ from app.api.dependencies import get_auth_service, get_email_service, get_token_
 from app.exceptions import VerificationTokenExpired, InvalidCredentials, \
     RegistrationFailed, InvalidEmail
 from app.models.users import User
-
+from app.logger import logger
 from app.schemas import RegisterRequest, LoginRequest, ChangePasswordRequest, MessageResponse, \
     ChangeEmailRequest, TokensResponse
 from app.services.auth_service import AuthService
@@ -177,7 +177,6 @@ async def oauth_login(provider: str, request: Request):
         return {"error": "Unsupported provider"}
 
     redirect_uri = request.url_for("oauth_callback", provider=provider)
-    print(redirect_uri)
     return await client.authorize_redirect(request, redirect_uri)
 
 
@@ -193,11 +192,10 @@ async def oauth_callback(provider: str, request: Request, response: Response,
     token = await client.authorize_access_token(request)
 
     userinfo = await client.userinfo(token=token)
-    print(userinfo)
+    logger.info(f"OAuth userinfo entered: {userinfo}")
 
     user = await auth_service.login_or_register_oauth_user(provider, userinfo)
     access, refresh = await token_service.generate_tokens_cookies(user.id, response)
 
     return TokensResponse(access_token=access, refresh_token=refresh,
-                          message="You were successfully registrated.")
-
+                          message="You have successfully entered your account")

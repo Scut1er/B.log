@@ -3,11 +3,12 @@ from datetime import datetime
 from jose import jwt
 
 from app.exceptions import TokenInvalid, TokenExpired
+from app.utils.constants import TOKEN_ALGORITHM
 
 
 def decode_jwt(token: str, key: str) -> dict:
     try:
-        return jwt.decode(token=token, key=key, algorithms=["ES256"])
+        return jwt.decode(token=token, key=key, algorithms=[TOKEN_ALGORITHM])
     except jwt.ExpiredSignatureError:
         raise TokenExpired
     except jwt.JWTError:
@@ -33,4 +34,4 @@ def create_jwt_token(user_id: int,
     payload = {"user_id": str(user_id),
                "type": token_type,
                "exp": expires_at}
-    return jwt.encode(claims=payload, key=private_key, algorithm="ES256")
+    return jwt.encode(claims=payload, key=private_key, algorithm=TOKEN_ALGORITHM)

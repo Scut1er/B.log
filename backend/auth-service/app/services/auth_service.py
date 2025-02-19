@@ -1,7 +1,7 @@
 from typing import Optional
 
 from app.exceptions import UserAlreadyExists, InvalidCredentials, EmailIsTaken, EmailVerificationFailed, \
-    UserAlreadyVerified
+    UserAlreadyVerified, NotFoundEmailOAuth
 from app.models.users import User
 from app.repositories.usersRepo import UsersRepository
 from app.utils.helpers import generate_hashed_password, check_password
@@ -37,15 +37,30 @@ class AuthService:
         return user
 
     async def login_or_register_oauth_user(self, provider: str, userinfo: dict) -> User:
-        email = userinfo.get("email")
+        provider_mapping = {
+            "google": {"email": "email", "fullname": "name", "provider_id": "sub"},
+            "yandex": {"email": "default_email", "fullname": "real_name", "provider_id": "id"},
+        }
+
+        mapping = provider_mapping.get(provider)
+        if not mapping:
+            raise ValueError(f"OAuth провайдер {provider} не поддерживается")
+
+        email = userinfo.get(mapping["email"])
+        fullname = userinfo.get(mapping["fullname"], email.split("@")[0] if email else "Unknown")
+        provider_id = userinfo.get(mapping["provider_id"])
+
+        if not email:
+            raise NotFoundEmailOAuth
+
         existing_user = await self.users_repository.find_by_email(email)
 
         if not existing_user:
             user = await self.users_repository.create_oauth_user(
                 email=email,
-                fullname=userinfo.get("name"),
+                fullname=fullname,
                 provider=provider,
-                provider_id=userinfo.get("sub"),
+                provider_id=provider_id,
             )
             return user
         return existing_user
