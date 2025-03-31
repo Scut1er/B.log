@@ -3,10 +3,10 @@ from fastapi import FastAPI, Request
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import JSONResponse
 
-from app.api.auth import router as auth_router
-from app.api.auth import oauth_router as oauth_router
+from app.api.auth_router import auth_router as auth_router
+from app.api.oauth_router import oauth_router as oauth_router
 from app.logger import logger
-from middlewares.exception_middleware import ExceptionMiddleware
+from app.middlewares.exception_middleware import ExceptionMiddleware
 
 app = FastAPI(title="Auth")
 
