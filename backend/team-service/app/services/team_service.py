@@ -1,8 +1,7 @@
-from app.exceptions import TeamNotExist, TeamAlreadyExists
+from app.exceptions import TeamNotExist, TeamAlreadyExists, LoadFileError
 from app.minio_db import delete_file
 from app.models.teams import Team
 from app.repositories.teamsRepo import TeamsRepository
-
 
 from app.utils.helpers import upload_logo
 
@@ -27,15 +26,15 @@ class TeamService:
     async def update_logo_team(self, team_id: int, name: str, logo) -> Team:
         logotype = await upload_logo(name, logo)
 
-        # Обновляем URL логотипа в БД
-        try:
-            team = await self.teams_repository.update_logo_url(team_id, logotype.logo_url)
-            return team
-        except Exception as e:
+        updated_team = await self.teams_repository.update_logo_url(team_id, logotype.logo_url)
+        if not updated_team:
             # Если БД обновить не удалось — удаляем загруженный файл
             delete_file("team-logos", logotype.filename)
-            raise e
+            raise LoadFileError
+        return updated_team
 
     async def get_team_by_id(self, team_id: int) -> Team:
         team = await self.teams_repository.find_by_id(team_id)
-        return team if team else TeamNotExist
+        if not team:
+            raise TeamNotExist
+        return team

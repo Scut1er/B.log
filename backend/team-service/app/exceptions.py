@@ -17,23 +17,34 @@ class CustomException(HTTPException):
 
 class TeamNotExist(CustomException):
     status_code = status.HTTP_404_NOT_FOUND
+    detail = "Team does not exist. Please check the team ID and try again."
 
 
 class TeamAlreadyExists(CustomException):
     status_code = status.HTTP_409_CONFLICT
-    detail = "Team with this name already exists"
+    detail = "A team with this name already exists. Please choose a different team name."
 
 
 class WrongFileFormat(CustomException):
     status_code = status.HTTP_400_BAD_REQUEST
-    detail = f"An unacceptable file format. Allowed: {ALLOWED_EXTENSIONS}"
+    detail = f"Invalid file format. Allowed formats: {', '.join(ALLOWED_EXTENSIONS)}."
 
 
 class WrongFileSize(CustomException):
     status_code = status.HTTP_400_BAD_REQUEST
-    detail = f"File size exceeds {int(MAX_FILE_SIZE / (1024 * 1024))}MB"
+    detail = f"The file size exceeds the allowed limit of {int(MAX_FILE_SIZE / (1024 * 1024))}MB."
 
 
 class WrongFileResolution(CustomException):
     status_code = status.HTTP_400_BAD_REQUEST
-    detail = f"The image should be from {MIN_WIDTH_LOGO}x{MIN_HEIGHT_LOGO} to {MAX_WIDTH_LOGO}x{MAX_HEIGHT_LOGO} pixels"
+    detail = (f"The image resolution is not acceptable."
+              f"The image must be between {MIN_WIDTH_LOGO}x{MIN_HEIGHT_LOGO} and {MAX_WIDTH_LOGO}x{MAX_HEIGHT_LOGO} pixels.")
+
+
+class LoadFileError(CustomException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "An error occurred while trying to upload the file."
+
+
+class DeleteFileError(CustomException):
+    status_code = status.HTTP_400_BAD_REQUEST

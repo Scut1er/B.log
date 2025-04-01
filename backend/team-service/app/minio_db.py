@@ -1,5 +1,6 @@
 from minio import Minio
 from app.config import settings
+from app.exceptions import LoadFileError, DeleteFileError
 
 client = Minio(
     "minio:9000",
@@ -17,7 +18,7 @@ def upload_file(bucket_name, file, filename) -> str:
         return f"http://localhost:9000/{bucket_name}/{filename}"
     except Exception as e:
         print(f"Ошибка добавления файла {filename} в бакета {bucket_name}: {e}")
-        raise
+        raise LoadFileError
 
 
 def delete_file(bucket_name, filename):
@@ -25,4 +26,4 @@ def delete_file(bucket_name, filename):
         client.remove_object(bucket_name, filename)
     except Exception as e:
         print(f"Ошибка удаления файла {filename} из бакета {bucket_name}: {e}")
-        raise
+        raise DeleteFileError

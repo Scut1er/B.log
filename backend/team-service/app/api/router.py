@@ -17,9 +17,10 @@ async def create_team(name: str = Form(...), city: str = Form(...),
     return TeamResponse(name=team.name, city=team.city, logo_url=team.logo_url)
 
 
-@team_router.get("/{team_id}")
+@team_router.get("/{team_id}", response_model=TeamResponse)
 async def get_team(team_id: int, team_service: TeamService = Depends(get_team_service)):
-    return await team_service.get_team_by_id(team_id)
+    team = await team_service.get_team_by_id(team_id)
+    return TeamResponse(name=team.name, city=team.city, logo_url=team.logo_url)
 
 
 @team_router.put("/{team_id}")
