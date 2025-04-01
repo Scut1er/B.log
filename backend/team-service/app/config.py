@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     DB_USER: str
     DB_PASS: str
     DB_NAME: str
+    MINIO_ROOT_USER: str
+    MINIO_ROOT_PASSWORD: str
 
     @property
     def DATABASE_URL(self):

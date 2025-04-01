@@ -10,8 +10,8 @@ class Team(Base):
     __tablename__ = "teams"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False, unique=True)
     city: Mapped[str] = mapped_column(nullable=True)
-    logo_url: Mapped[Optional[str]] = mapped_column(nullable=True)
+    logo_url: Mapped[Optional[str]] = mapped_column(nullable=True, unique=True)
 
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

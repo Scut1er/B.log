@@ -26,6 +26,6 @@ class Player(Base):
     weight_kg: Mapped[Optional[int]] = mapped_column(nullable=True)
 
     position: Mapped[Optional[PlayerPosition]] = mapped_column(Enum(PlayerPosition), nullable=True)
-    photo_url: Mapped[Optional[str]] = mapped_column(nullable=True)
+    photo_url: Mapped[Optional[str]] = mapped_column(nullable=True, unique=True)
 
     team_id: Mapped[Optional[int]] = mapped_column(ForeignKey("teams.id", ondelete="SET NULL"), nullable=True)

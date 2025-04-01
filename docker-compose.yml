@@ -20,6 +20,22 @@ services:
     networks:
       - custom_network
 
+  minio:
+    image: minio/minio
+    container_name: minio
+    restart: always
+    volumes:
+      - miniodata:/data
+    env_file:
+      ./backend/team-service/.env
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server --console-address ":9001" /data
+    networks:
+      - custom_network
+
+
   redis:
     image: redis:7
     container_name: redis_container
@@ -71,6 +87,7 @@ services:
 volumes:
   postgresdata:
   redisdata:
+  miniodata:
 
 
 networks:
