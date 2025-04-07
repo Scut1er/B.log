@@ -1,6 +1,6 @@
 from minio import Minio
 from app.config import settings
-from app.exceptions import LoadFileError, DeleteFileError
+from app.exceptions import LoadFileError
 
 client = Minio(
     "minio:9000",
@@ -26,4 +26,4 @@ def delete_file(bucket_name, filename):
         client.remove_object(bucket_name, filename)
     except Exception as e:
         print(f"Ошибка удаления файла {filename} из бакета {bucket_name}: {e}")
-        raise DeleteFileError
+

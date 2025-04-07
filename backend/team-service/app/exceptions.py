@@ -25,6 +25,11 @@ class TeamAlreadyExists(CustomException):
     detail = "A team with this name already exists. Please choose a different team name."
 
 
+class UpdateLogoError(CustomException):
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    detail = "Update Logo Error"
+
+
 class WrongFileFormat(CustomException):
     status_code = status.HTTP_400_BAD_REQUEST
     detail = f"Invalid file format. Allowed formats: {', '.join(ALLOWED_EXTENSIONS)}."
@@ -44,7 +49,3 @@ class WrongFileResolution(CustomException):
 class LoadFileError(CustomException):
     status_code = status.HTTP_400_BAD_REQUEST
     detail = "An error occurred while trying to upload the file."
-
-
-class DeleteFileError(CustomException):
-    status_code = status.HTTP_400_BAD_REQUEST
