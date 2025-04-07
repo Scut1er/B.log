@@ -1,12 +1,14 @@
 from typing import Optional
+from urllib.parse import urlparse
 
 from fastapi import UploadFile
 
-from app.exceptions import TeamNotExist, TeamAlreadyExists
+from app.exceptions import TeamNotExist, TeamAlreadyExists, UpdateLogoError
+from app.minio_db import delete_file
 from app.models.teams import Team
 from app.repositories.teamsRepo import TeamsRepository
 
-from app.utils.helpers import safe_upload_logo
+from app.utils.helpers import upload_logo
 
 
 class TeamService:
@@ -21,13 +23,16 @@ class TeamService:
             raise TeamAlreadyExists
 
         team_data = {"name": name, "city": city}
+        team = await self.teams_repository.create_team(team_data)
 
         if logo:
-            async with safe_upload_logo(name, logo) as logotype:
-                team_data["logo_url"] = logotype.logo_url
-                return await self.teams_repository.create_team(team_data)
+            logotype = await upload_logo(logo)  # Загружаем логотип
+            team = await self.teams_repository.update_logo_url(team.id, logotype.logo_url)
+            if not team:
+                delete_file("team-logos", logotype.filename)  # Если обновление не удалось, удаляем
+                raise UpdateLogoError
 
-        return await self.teams_repository.create_team(team_data)
+        return team
 
     async def update_team(self, team_id: int,
                           name: Optional[str], city: Optional[str],
@@ -39,16 +44,24 @@ class TeamService:
             update_fields["name"] = name
         if city and team.city != city:
             update_fields["city"] = city
+        if update_fields:
+            team = await self.teams_repository.update_team(team_id, update_fields)
 
         if logo:
-            async with safe_upload_logo(name or team.name, logo) as logotype:
-                update_fields["logo_url"] = logotype.logo_url
-                return await self.teams_repository.update_team(team_id, update_fields)
+            old_logo_filename = None
+            if team.logo_url:  # Проверяем, есть ли старый логотип
+                old_logo_filename = urlparse(str(team.logo_url)).path.split("/")[-1]
 
-        if not update_fields:
-            return team
+            logotype = await upload_logo(logo)  # Загружаем новый логотип
+            team = await self.teams_repository.update_logo_url(team.id, logotype.logo_url)
+            if not team:
+                delete_file("team-logos", logotype.filename)  # Если обновление не удалось, удаляем новый логотип
+                raise UpdateLogoError
+            else:
+                if old_logo_filename:
+                    delete_file("team-logos", old_logo_filename)  # Если обновление удалось, удаляем старый логотип
 
-        return await self.teams_repository.update_team(team_id, update_fields)
+        return team
 
     async def get_team_by_id(self, team_id: int) -> Team:
         team = await self.teams_repository.find_by_id(team_id)

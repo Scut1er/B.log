@@ -1,4 +1,5 @@
 import imghdr
+import uuid
 from contextlib import asynccontextmanager
 from io import BytesIO
 from typing import Optional
@@ -43,27 +44,15 @@ async def validate_image(logo) -> BytesIO:
     return image_stream
 
 
-async def upload_logo(name: str, logo) -> Logo:
+async def upload_logo(logo) -> Logo:
     # Проверка изображения и получение потока с валидными данными
     validated_logo = await validate_image(logo)
 
     file_ext = logo.filename.split(".")[-1].lower()
-    filename = f"{name}_logo.{file_ext}"
+    unique_id = uuid.uuid4()
+    filename = f"{unique_id}.{file_ext}"
+
     logo_url = upload_file("team-logos", validated_logo, filename)
     return Logo(filename=filename, logo_url=logo_url)
 
 
-@asynccontextmanager
-async def safe_upload_logo(name: str, logo, callback_on_fail: Optional[callable] = None):
-    """
-    Загружает логотип и возвращает объект с `logo_url` и `filename`.
-    В случае ошибки в вызывающем коде — можно безопасно удалить логотип.
-    """
-    logotype = await upload_logo(name, logo)
-    try:
-        yield logotype
-    except Exception:
-        delete_file("team-logos", logotype.filename)
-        if callback_on_fail:
-            callback_on_fail()
-        raise
