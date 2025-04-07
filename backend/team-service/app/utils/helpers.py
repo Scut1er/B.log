@@ -1,9 +1,12 @@
 import imghdr
+from contextlib import asynccontextmanager
 from io import BytesIO
+from typing import Optional
+
 from PIL import Image
 
 from app.exceptions import WrongFileFormat, WrongFileSize, WrongFileResolution
-from app.minio_db import upload_file
+from app.minio_db import upload_file, delete_file
 from app.schemas import Logo
 
 from app.utils.constants import ALLOWED_EXTENSIONS, MAX_FILE_SIZE, MIN_WIDTH_LOGO, MAX_HEIGHT_LOGO, MIN_HEIGHT_LOGO, \
@@ -48,3 +51,19 @@ async def upload_logo(name: str, logo) -> Logo:
     filename = f"{name}_logo.{file_ext}"
     logo_url = upload_file("team-logos", validated_logo, filename)
     return Logo(filename=filename, logo_url=logo_url)
+
+
+@asynccontextmanager
+async def safe_upload_logo(name: str, logo, callback_on_fail: Optional[callable] = None):
+    """
+    Загружает логотип и возвращает объект с `logo_url` и `filename`.
+    В случае ошибки в вызывающем коде — можно безопасно удалить логотип.
+    """
+    logotype = await upload_logo(name, logo)
+    try:
+        yield logotype
+    except Exception:
+        delete_file("team-logos", logotype.filename)
+        if callback_on_fail:
+            callback_on_fail()
+        raise

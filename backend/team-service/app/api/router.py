@@ -18,11 +18,18 @@ async def create_team(name: str = Form(...), city: str = Form(...),
 
 
 @team_router.get("/{team_id}", response_model=TeamResponse)
-async def get_team(team_id: int, team_service: TeamService = Depends(get_team_service)):
+async def get_team_info(team_id: int, team_service: TeamService = Depends(get_team_service)):
     team = await team_service.get_team_by_id(team_id)
     return TeamResponse(name=team.name, city=team.city, logo_url=team.logo_url)
 
 
-@team_router.put("/{team_id}")
-async def update_team(team_id: int):
-    ...
+@team_router.patch("/{team_id}", response_model=TeamResponse)
+async def update_team_info(
+    team_id: int,
+    name: Optional[str] = Form(None),
+    city: Optional[str] = Form(None),
+    logo: Optional[UploadFile] = File(None),
+    team_service: TeamService = Depends(get_team_service),
+):
+    team = await team_service.update_team(team_id, name, city, logo)
+    return TeamResponse(name=team.name, city=team.city, logo_url=team.logo_url)

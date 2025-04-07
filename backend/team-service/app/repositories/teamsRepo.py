@@ -16,6 +16,14 @@ class TeamsRepository(SQLAlchemyRepository):
             await session.commit()
             return result.fetchone()
 
+    async def update_team(self, team_id: int, update_data: dict) -> Team:
+        """Обновляет инфо команды по ID"""
+        async with async_session_maker() as session:
+            stmt = update(Team).where(Team.id == team_id).values(**update_data).returning(Team.__table__.columns)
+            result = await session.execute(stmt)
+            await session.commit()
+            return result.fetchone()
+
     async def update_logo_url(self, team_id: int, logo_url: str) -> Team:
         """Обновляет логотип у команды"""
         async with async_session_maker() as session:

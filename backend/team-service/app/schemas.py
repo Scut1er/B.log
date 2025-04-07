@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 
+
 class TeamResponse(BaseModel):
     name: str
     city: str
