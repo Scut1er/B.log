@@ -25,6 +25,11 @@ class TeamAlreadyExists(CustomException):
     detail = "A team with this name already exists. Please choose a different team name."
 
 
+class DeleteTeamError(CustomException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "Error with deleting team"
+
+
 class UpdateLogoError(CustomException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     detail = "Update Logo Error"

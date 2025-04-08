@@ -3,10 +3,10 @@ from typing import Optional
 from fastapi import APIRouter, UploadFile, Depends, Form, File
 
 from app.api.dependencies import get_team_service
-from app.schemas import TeamResponse
+from app.schemas import TeamResponse, MessageResponse
 from app.services.team_service import TeamService
 
-team_router = APIRouter(prefix="/team")
+team_router = APIRouter(prefix="/teams")
 
 
 @team_router.post("/create", response_model=TeamResponse)
@@ -25,11 +25,17 @@ async def get_team_info(team_id: int, team_service: TeamService = Depends(get_te
 
 @team_router.patch("/{team_id}", response_model=TeamResponse)
 async def update_team_info(
-    team_id: int,
-    name: Optional[str] = Form(None),
-    city: Optional[str] = Form(None),
-    logo: Optional[UploadFile] = File(None),
-    team_service: TeamService = Depends(get_team_service),
+        team_id: int,
+        name: Optional[str] = Form(None),
+        city: Optional[str] = Form(None),
+        logo: Optional[UploadFile] = File(None),
+        team_service: TeamService = Depends(get_team_service),
 ):
     team = await team_service.update_team(team_id, name, city, logo)
     return TeamResponse(name=team.name, city=team.city, logo_url=team.logo_url)
+
+
+@team_router.delete("/{team_id}", response_model=MessageResponse)
+async def delete_team(team_id: int, team_service: TeamService = Depends(get_team_service)):
+    await team_service.delete_team(team_id)
+    return MessageResponse(message="Successfully deleted")

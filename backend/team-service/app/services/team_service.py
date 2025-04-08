@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 
 from fastapi import UploadFile
 
-from app.exceptions import TeamNotExist, TeamAlreadyExists, UpdateLogoError
+from app.exceptions import TeamNotExist, TeamAlreadyExists, UpdateLogoError, DeleteTeamError
 from app.minio_db import delete_file
 from app.models.teams import Team
 from app.repositories.teamsRepo import TeamsRepository
@@ -71,3 +71,15 @@ class TeamService:
         if not team:
             raise TeamNotExist
         return team
+
+    async def delete_team(self, team_id: int):
+        team = await self.get_team_by_id(team_id)
+
+        # Удаляем логотип, если он есть
+        if team.logo_url:
+            logo_filename = urlparse(str(team.logo_url)).path.split("/")[-1]
+            delete_file("team-logos", logo_filename)
+
+        team_is_deleted = await self.teams_repository.delete_by_id(team_id)
+        if not team_is_deleted:
+            raise DeleteTeamError

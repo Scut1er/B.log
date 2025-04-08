@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from sqlalchemy import insert, select, update
+from sqlalchemy import insert, select, update, delete
 
 from app.db import async_session_maker
 
@@ -32,6 +32,14 @@ class SQLAlchemyRepository(AbstractRepository):
             stmt = select(self.model).where(self.model.id == record_id)
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
+
+    async def delete_by_id(self, record_id: int) -> bool:
+        """Удаление записи по id"""
+        async with async_session_maker() as session:
+            stmt = delete(self.model).where(self.model.id == record_id)
+            result = await session.execute(stmt)
+            await session.commit()
+            return result.rowcount > 0  # Кол-во удалённых строк
 
     async def find_all(self):
         """Получение всех записей"""

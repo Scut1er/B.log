@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 
-from app.api.router import team_router
+from app.api.team_router import team_router
 
 app = FastAPI()
 
