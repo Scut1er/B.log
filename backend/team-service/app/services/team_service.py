@@ -51,20 +51,26 @@ class TeamService:
             team = await self.teams_repository.update_team(team_id, update_fields)
 
         if logo:
-            old_logo_filename = None
-            if team.logo_url:  # Проверяем, есть ли старый логотип
-                old_logo_filename = urlparse(str(team.logo_url)).path.split("/")[-1]
-
-            logotype = await upload_logo(logo)  # Загружаем новый логотип
-            team = await self.teams_repository.update_logo_url(team.id, logotype.logo_url)
-            if not team:
-                delete_file("team-logos", logotype.filename)  # Если обновление не удалось, удаляем новый логотип
-                raise UpdateLogoError
-            else:
-                if old_logo_filename:
-                    delete_file("team-logos", old_logo_filename)  # Если обновление удалось, удаляем старый логотип
+            team = await self._replace_logo(team, logo)
 
         return team
+
+    async def _replace_logo(self, team: Team, new_logo: UploadFile) -> Team:
+        old_logo_filename = None
+        if team.logo_url:  # Проверяем, есть ли старый логотип
+            old_logo_filename = urlparse(str(team.logo_url)).path.split("/")[-1]
+
+        logotype = await upload_logo(new_logo)  # Загружаем новый логотип
+        updated_team = await self.teams_repository.update_logo_url(team.id, logotype.logo_url)
+
+        if not updated_team:
+            delete_file("team-logos", logotype.filename)  # Если обновление не удалось, удаляем новый логотип
+            raise UpdateLogoError
+
+        if old_logo_filename:
+            delete_file("team-logos", old_logo_filename)  # Если обновление удалось, удаляем старый логотип
+
+        return updated_team
 
     async def get_team_by_id(self, team_id: int) -> Team:
         team = await self.teams_repository.find_by_id(team_id)
