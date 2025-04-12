@@ -59,3 +59,13 @@ class WrongFileResolution(CustomException):
 class LoadFileError(CustomException):
     status_code = status.HTTP_400_BAD_REQUEST
     detail = "An error occurred while trying to upload the file."
+
+
+class InvalidBirthDateFormat(CustomException):
+    status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+    detail = "birth_date должен быть в формате YYYY-MM-DD"
+
+
+class InvalidHeightOrWeight(CustomException):
+    status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+    detail = "Рост и вес должны быть в диапазоне от 1 до 300"
