@@ -8,10 +8,7 @@ from alembic import context
 
 from app.config import settings
 from app.db import Base
-from app.models.players import Player
-from app.models.coaches import Coach
-from app.models.teams import Team
-
+from app.models import Team, Player, Coach
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -29,6 +26,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

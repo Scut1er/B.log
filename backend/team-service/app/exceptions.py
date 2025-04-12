@@ -35,6 +35,11 @@ class UpdateLogoError(CustomException):
     detail = "Update Logo Error"
 
 
+class UpdatePhotoError(CustomException):
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    detail = "Update Photo Error"
+
+
 class WrongFileFormat(CustomException):
     status_code = status.HTTP_400_BAD_REQUEST
     detail = f"Invalid file format. Allowed formats: {', '.join(ALLOWED_EXTENSIONS)}."

@@ -1,14 +1,12 @@
 import imghdr
 import uuid
-from contextlib import asynccontextmanager
 from io import BytesIO
-from typing import Optional
 
 from PIL import Image
 
 from app.exceptions import WrongFileFormat, WrongFileSize, WrongFileResolution
-from app.minio_db import upload_file, delete_file
-from app.schemas import Logo
+from app.minio_db import upload_file
+from app.schemas.common import Photo
 
 from app.utils.constants import ALLOWED_EXTENSIONS, MAX_FILE_SIZE, MIN_WIDTH_LOGO, MAX_HEIGHT_LOGO, MIN_HEIGHT_LOGO, \
     MAX_WIDTH_LOGO
@@ -44,15 +42,13 @@ async def validate_image(logo) -> BytesIO:
     return image_stream
 
 
-async def upload_logo(logo) -> Logo:
+async def upload_image_minio(image, bucket_name) -> Photo:
     # Проверка изображения и получение потока с валидными данными
-    validated_logo = await validate_image(logo)
+    validated_image = await validate_image(image)
 
-    file_ext = logo.filename.split(".")[-1].lower()
+    file_ext = image.filename.split(".")[-1].lower()
     unique_id = uuid.uuid4()
     filename = f"{unique_id}.{file_ext}"
 
-    logo_url = upload_file("team-logos", validated_logo, filename)
-    return Logo(filename=filename, logo_url=logo_url)
-
-
+    image_url = upload_file(bucket_name, validated_image, filename)
+    return Photo(filename=filename, image_url=image_url)

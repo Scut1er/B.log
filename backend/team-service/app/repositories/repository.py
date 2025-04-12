@@ -3,6 +3,10 @@ from abc import ABC, abstractmethod
 from sqlalchemy import insert, select, update, delete
 
 from app.db import async_session_maker
+from typing import TypeVar, Generic, Type, Optional
+from sqlalchemy.orm import DeclarativeMeta
+
+ModelType = TypeVar("ModelType", bound=DeclarativeMeta)  # SQLAlchemy модель
 
 
 class AbstractRepository(ABC):
@@ -15,11 +19,11 @@ class AbstractRepository(ABC):
         raise NotImplementedError
 
 
-class SQLAlchemyRepository(AbstractRepository):
-    model = None
+class SQLAlchemyRepository(AbstractRepository, Generic[ModelType]):
+    model: Type[ModelType]
 
     async def add_one(self, data: dict) -> int:
-        """Добавление записи"""
+        """Добавление записи c возвратом id"""
         async with async_session_maker() as session:
             stmt = insert(self.model).values(**data).returning(self.model.id)
             result = await session.execute(stmt)
@@ -41,7 +45,7 @@ class SQLAlchemyRepository(AbstractRepository):
             await session.commit()
             return result.rowcount > 0  # Кол-во удалённых строк
 
-    async def find_all(self):
+    async def find_all(self) -> list[ModelType]:
         """Получение всех записей"""
         async with async_session_maker() as session:
             stmt = select(self.model)
@@ -49,8 +53,8 @@ class SQLAlchemyRepository(AbstractRepository):
             result = [row[0].to_read_model() for row in result.scalars()]
             return result
 
-    async def update(self, record_id: int, data: dict) -> bool:
-        """Обновление 1 записи"""
+    async def update_returning_bool(self, record_id: int, data: dict) -> bool:
+        """Обновление 1 записи с возвратом успеха"""
         async with async_session_maker() as session:
             stmt = (update(self.model).
                     where(self.model.id == record_id).
