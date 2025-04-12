@@ -20,6 +20,11 @@ class TeamNotExist(CustomException):
     detail = "Team does not exist. Please check the team ID and try again."
 
 
+class PlayerNotExist(CustomException):
+    status_code = status.HTTP_404_NOT_FOUND
+    detail = "Player does not exist. Please check the player ID and try again."
+
+
 class TeamAlreadyExists(CustomException):
     status_code = status.HTTP_409_CONFLICT
     detail = "A team with this name already exists. Please choose a different team name."
@@ -28,6 +33,10 @@ class TeamAlreadyExists(CustomException):
 class DeleteTeamError(CustomException):
     status_code = status.HTTP_400_BAD_REQUEST
     detail = "Error with deleting team"
+
+class DeletePlayerError(CustomException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "Error with deleting player"
 
 
 class UpdateLogoError(CustomException):

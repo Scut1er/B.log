@@ -7,7 +7,7 @@ from app.schemas.common import MessageResponse
 from app.schemas.teams import TeamResponse, TeamForm
 from app.services.team_service import TeamService
 
-team_router = APIRouter(prefix="/teams")
+team_router = APIRouter(prefix="/teams", tags=["Teams"])
 
 
 @team_router.post("/create", response_model=TeamResponse)
