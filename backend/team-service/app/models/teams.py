@@ -1,9 +1,8 @@
 from datetime import datetime, timezone
-
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing import Optional, List
+from typing import List, Optional
 
 from app.db import Base
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class Team(Base):

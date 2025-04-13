@@ -2,14 +2,13 @@ import imghdr
 import uuid
 from io import BytesIO
 
-from PIL import Image
-
-from app.exceptions import WrongFileFormat, WrongFileSize, WrongFileResolution
+from app.exceptions import WrongFileFormat, WrongFileResolution, WrongFileSize
 from app.minio_db import upload_file
 from app.schemas.common import Photo
-
-from app.utils.constants import ALLOWED_EXTENSIONS, MAX_FILE_SIZE, MIN_WIDTH_LOGO, MAX_HEIGHT_LOGO, MIN_HEIGHT_LOGO, \
-    MAX_WIDTH_LOGO
+from app.utils.constants import (ALLOWED_EXTENSIONS, MAX_FILE_SIZE,
+                                 MAX_HEIGHT_LOGO, MAX_WIDTH_LOGO,
+                                 MIN_HEIGHT_LOGO, MIN_WIDTH_LOGO)
+from PIL import Image
 
 
 async def validate_image(logo) -> BytesIO:

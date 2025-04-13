@@ -1,14 +1,14 @@
 from typing import Optional
 from urllib.parse import urlparse
 
-from fastapi import UploadFile
-
-from app.exceptions import UpdateLogoError, UpdatePhotoError, TeamNotExist, PlayerNotExist, DeletePlayerError
+from app.exceptions import (DeletePlayerError, PlayerNotExist, TeamNotExist,
+                            UpdatePhotoError)
 from app.minio_db import delete_file
 from app.models.players import Player
 from app.repositories.playersRepo import PlayersRepository
 from app.repositories.teamsRepo import TeamsRepository
 from app.utils.helpers import upload_image_minio
+from fastapi import UploadFile
 
 
 class PlayerService:
@@ -93,7 +93,7 @@ class PlayerService:
     async def delete_player(self, player_id: int):
         player = await self.get_player_by_id(player_id)
 
-        # Удаляем логотип, если он есть
+        # Удаляем фото, если он есть
         if player.photo_url:
             photo_filename = urlparse(str(player.photo_url)).path.split("/")[-1]
             delete_file("player-photos", photo_filename)

@@ -1,14 +1,13 @@
 from typing import Optional
 from urllib.parse import urlparse
 
-from fastapi import UploadFile
-
-from app.exceptions import TeamNotExist, TeamAlreadyExists, UpdateLogoError, DeleteTeamError
+from app.exceptions import (DeleteTeamError, TeamAlreadyExists, TeamNotExist,
+                            UpdateLogoError)
 from app.minio_db import delete_file
 from app.models.teams import Team
 from app.repositories.teamsRepo import TeamsRepository
-
 from app.utils.helpers import upload_image_minio
+from fastapi import UploadFile
 
 
 class TeamService:
@@ -75,7 +74,7 @@ class TeamService:
         return updated_team
 
     async def get_team_by_id(self, team_id: int) -> Team:
-        team = await self.teams_repository.find_by_id(team_id)
+        team = await self.teams_repository.get_with_players_and_coach(team_id)
         if not team:
             raise TeamNotExist
         return team

@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
-
-from sqlalchemy import insert, select, update, delete
+from typing import Generic, Type, TypeVar
 
 from app.db import async_session_maker
-from typing import TypeVar, Generic, Type, Optional
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.orm import DeclarativeMeta
 
 ModelType = TypeVar("ModelType", bound=DeclarativeMeta)  # SQLAlchemy модель
@@ -56,9 +55,7 @@ class SQLAlchemyRepository(AbstractRepository, Generic[ModelType]):
     async def update_returning_bool(self, record_id: int, data: dict) -> bool:
         """Обновление 1 записи с возвратом успеха"""
         async with async_session_maker() as session:
-            stmt = (update(self.model).
-                    where(self.model.id == record_id).
-                    values(**data))
+            stmt = update(self.model).where(self.model.id == record_id).values(**data)
             result = await session.execute(stmt)
             await session.commit()
         return result.rowcount  # кол-во измененных строк в бд == True/False

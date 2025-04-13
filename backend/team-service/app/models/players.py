@@ -1,10 +1,10 @@
-from sqlalchemy import ForeignKey, Enum
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import datetime, date
-from typing import Optional
 import enum
+from datetime import date
+from typing import Optional
 
 from app.db import Base
+from sqlalchemy import Enum, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class PlayerPosition(enum.Enum):
